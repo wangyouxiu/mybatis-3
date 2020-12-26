@@ -15,9 +15,13 @@
  */
 package org.apache.ibatis.autoconstructor;
 
+import lombok.Data;
+
+import java.io.Serializable;
 import java.util.Date;
 
-public class PrimitiveSubject {
+@Data
+public class PrimitiveSubject implements Serializable {
   private final int id;
   private final String name;
   private final int age;

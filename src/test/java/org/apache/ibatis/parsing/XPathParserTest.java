@@ -24,20 +24,27 @@ import java.io.Reader;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.xpath.XPath;
 
+import lombok.extern.slf4j.Slf4j;
 import org.apache.ibatis.builder.BuilderException;
 import org.apache.ibatis.io.Resources;
 import org.junit.jupiter.api.Test;
 import org.w3c.dom.Document;
 import org.xml.sax.InputSource;
 
+@Slf4j
 class XPathParserTest {
   private String resource = "resources/nodelet_test.xml";
 
   // InputStream Source
   @Test
   void constructorWithInputStreamValidationVariablesEntityResolver() throws Exception {
-
+    /**
+     * XPathParser：是对XPath再封装
+     * {@link org.apache.ibatis.parsing.XPathParser#XPathParser(java.io.InputStream, boolean, java.util.Properties, org.xml.sax.EntityResolver)}
+     * 中调用了XPath的API获取到Document对象
+     */
     try (InputStream inputStream = Resources.getResourceAsStream(resource)) {
       XPathParser parser = new XPathParser(inputStream, false, null, null);
       testEvalMethod(parser);
@@ -184,8 +191,16 @@ class XPathParserTest {
   }
 
   private void testEvalMethod(XPathParser parser) {
-    assertEquals((Long) 1970L, parser.evalLong("/employee/birth_date/year"));
-    assertEquals((Long) 1970L, parser.evalNode("/employee/birth_date/year").getLongBody());
+    /**
+     * 这里测试了一下  eval*** 方法
+     * 其本质是在底层调用{@link XPathParser#evalString(java.lang.Object, java.lang.String)
+     * 在方法中调用了 XPath 的 {@link XPath#evaluate(java.lang.String, java.lang.Object, javax.xml.namespace.QName)} 方法获得值
+     * 然后使用 {@link PropertyParser#parse(java.lang.String, java.util.Properties)}方法来通过配置修改配置值
+     */
+    Long aLong = parser.evalLong("/employee/birth_date/year");
+    log.info("along====>:{}", aLong);
+    Long year = parser.evalNode("/employee/birth_date/year").getLongBody();
+    log.info("year====>:{}", year);
     assertEquals((short) 6, (short) parser.evalShort("/employee/birth_date/month"));
     assertEquals((Integer) 15, parser.evalInteger("/employee/birth_date/day"));
     assertEquals((Integer) 15, parser.evalNode("/employee/birth_date/day").getIntBody());

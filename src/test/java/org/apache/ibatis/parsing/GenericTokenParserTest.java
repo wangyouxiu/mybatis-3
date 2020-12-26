@@ -42,6 +42,13 @@ class GenericTokenParserTest {
 
   @Test
   void shouldDemonstrateGenericTokenReplacement() {
+    /**
+     * 使用自己实现的TokenHandler来构建GenericTokenParser
+     * 这个实现很简单，就是根据key来获取value
+     * parsing包中对TokenHandler的实现是 {@link PropertyParser.VariableTokenHandler}
+     * 其核心方法{@link PropertyParser.VariableTokenHandler#handleToken(java.lang.String)}
+     * 其中包含了默认值的逻辑
+     */
     GenericTokenParser parser = new GenericTokenParser("${", "}", new VariableTokenHandler(new HashMap<String, String>() {
       {
         put("first_name", "James");

@@ -21,7 +21,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import java.io.Reader;
 import java.util.List;
 
-import org.apache.ibatis.BaseDataTest;
+import com.alibaba.fastjson.JSON;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.ibatis.exceptions.PersistenceException;
 import org.apache.ibatis.io.Resources;
 import org.apache.ibatis.session.SqlSession;
@@ -31,6 +32,7 @@ import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
+@Slf4j
 class AutoConstructorTest {
   private static SqlSessionFactory sqlSessionFactory;
 
@@ -42,15 +44,16 @@ class AutoConstructorTest {
     }
 
     // populate in-memory database
-    BaseDataTest.runScript(sqlSessionFactory.getConfiguration().getEnvironment().getDataSource(),
-        "org/apache/ibatis/autoconstructor/CreateDB.sql");
+//    BaseDataTest.runScript(sqlSessionFactory.getConfiguration().getEnvironment().getDataSource(),
+//        "org/apache/ibatis/autoconstructor/CreateDB.sql");
   }
 
   @Test
   void fullyPopulatedSubject() {
     try (SqlSession sqlSession = sqlSessionFactory.openSession()) {
       final AutoConstructorMapper mapper = sqlSession.getMapper(AutoConstructorMapper.class);
-      final Object subject = mapper.getSubject(1);
+      PrimitiveSubject subject = mapper.getSubject(1);
+      log.info(JSON.toJSONString(subject));
       assertNotNull(subject);
     }
   }
@@ -59,6 +62,8 @@ class AutoConstructorTest {
   void primitiveSubjects() {
     try (SqlSession sqlSession = sqlSessionFactory.openSession()) {
       final AutoConstructorMapper mapper = sqlSession.getMapper(AutoConstructorMapper.class);
+      List<PrimitiveSubject> subjects = mapper.getSubjects();
+      log.info(JSON.toJSONString(subjects));
       assertThrows(PersistenceException.class, mapper::getSubjects);
     }
   }
