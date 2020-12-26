@@ -51,7 +51,7 @@ class PropertyParserTest {
      */
     Assertions.assertThat(PropertyParser.parse("${a:b}", props)).isEqualTo("c");
 
-    //移除 是否开启默认值的配置  次配置项默认是为false
+    //移除 是否开启默认值的配置  此配置项默认是为false
     // 因此和   props.setProperty(PropertyParser.KEY_ENABLE_DEFAULT_VALUE, "false");   效果一样
     props.remove(PropertyParser.KEY_ENABLE_DEFAULT_VALUE);
     Assertions.assertThat(PropertyParser.parse("${a:b}", props)).isEqualTo("c");

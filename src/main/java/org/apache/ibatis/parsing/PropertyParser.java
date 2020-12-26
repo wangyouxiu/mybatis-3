@@ -57,8 +57,11 @@ public class PropertyParser {
   }
 
   private static class VariableTokenHandler implements TokenHandler {
+    //配置项，内部继承了Hashtable，存储的是key - value键值对，使用上和HashMap一样
     private final Properties variables;
+    //表示是否开启默认配置  默认false，即默认不开启
     private final boolean enableDefaultValue;
+    //默认的分隔符   默认是":"
     private final String defaultValueSeparator;
 
     private VariableTokenHandler(Properties variables) {
@@ -68,28 +71,39 @@ public class PropertyParser {
     }
 
     private String getPropertyValue(String key, String defaultValue) {
+      //主要是处理enableDefaultValue，defaultValueSeparator的配置
+      //对应配置项存在就使用配置中的，否则使用默认值
       return (variables == null) ? defaultValue : variables.getProperty(key, defaultValue);
     }
 
     @Override
     public String handleToken(String content) {
+      //实现TokenHandler的接口
+      //配置存在
       if (variables != null) {
         String key = content;
         if (enableDefaultValue) {
+          //默认配置开启
+          //判断是否包含默认的分隔符   默认":"
           final int separatorIndex = content.indexOf(defaultValueSeparator);
           String defaultValue = null;
+          //若包含，默认值为 “:” 之后的部分
           if (separatorIndex >= 0) {
             key = content.substring(0, separatorIndex);
             defaultValue = content.substring(separatorIndex + defaultValueSeparator.length());
           }
+          //若默认值不为空，尝试在配置中获取key的配置值
+          //若可以获取到，则返回其配置值，否则返回默认值
           if (defaultValue != null) {
             return variables.getProperty(key, defaultValue);
           }
         }
+        //判断是否存在当前key的配置，存在则返回
         if (variables.containsKey(key)) {
           return variables.getProperty(key);
         }
       }
+      //配置不存在，或者没有找到对应的key的配置，返回对应的key
       return "${" + content + "}";
     }
   }

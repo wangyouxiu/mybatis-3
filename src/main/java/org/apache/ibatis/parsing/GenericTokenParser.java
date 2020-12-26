@@ -31,6 +31,14 @@ public class GenericTokenParser {
   }
 
   public String parse(String text) {
+    /**
+     * 大概实现的功能是解析字符串中的特定字符，将其替换为对应的配置项中的值
+     * 比如：select * from user where id = ${id}
+     * 此时我们想要将${id}替换为具体的id
+     * 那么openToken=“${”  closeToken="}"
+     * 下面的代码就是将"${id}"，依据openToken、closeToken，解析为"id"
+     * 然后在调用对应的 handler.handleToken(String content) 接口从配置中获取值
+     */
     if (text == null || text.isEmpty()) {
       return "";
     }
