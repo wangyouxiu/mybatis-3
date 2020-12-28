@@ -23,17 +23,23 @@ import java.io.Serializable;
 import java.util.Arrays;
 import java.util.List;
 
+import com.alibaba.fastjson.JSON;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.ibatis.reflection.invoker.Invoker;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+@Slf4j
 class ReflectorTest {
 
   @Test
   void testGetSetterType() {
     ReflectorFactory reflectorFactory = new DefaultReflectorFactory();
     Reflector reflector = reflectorFactory.findForClass(Section.class);
-    Assertions.assertEquals(Long.class, reflector.getSetterType("id"));
+    Class<?> idClass = reflector.getSetterType("id");
+    if (idClass.equals(Long.class)) {
+      log.info("id属性的set方法，入参的类型为:{}", JSON.toJSONString(idClass));
+    }
   }
 
   @Test
