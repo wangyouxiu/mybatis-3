@@ -98,7 +98,7 @@ public class Reflector {
     addGetMethods(clazz);
     //设置setting方法
     addSetMethods(clazz);
-    //设置属性
+    //设置属性  有一些属性没有提供get或者set方法，所以在get、set方法设定的时候，会漏掉这些属性
     addFields(clazz);
     //设置可读属性
     readablePropertyNames = getMethods.keySet().toArray(new String[0]);
@@ -155,12 +155,13 @@ public class Reflector {
         //判断两者返回值类型是否相同
         if (candidateType.equals(winnerType)) {
           //判断返回是否是布尔类型
+          //只有boolean类型的返回值运行有两个相同的方法
           if (!boolean.class.equals(candidateType)) {
-            //设置为有歧义
+            //返回值非boolean类型，设置为有歧义
             isAmbiguous = true;
             break;
           } else if (candidate.getName().startsWith("is")) {
-            //是布尔类型，并且方法名称是"is"开头
+            //boolean类型的返回值，以is开头的方法被认为是最合适的
             winner = candidate;
           }
           //candidateType 是 winnerType 的超类或者超接口 则winner是最合适的
@@ -175,7 +176,9 @@ public class Reflector {
           break;
         }
       }
-      //将解决冲突后的getting方法加入
+      /**
+       * 将解决冲突后的getting方法加入，如果是有歧义的，那就生成歧义方法调用者
+       */
       addGetMethod(propName, winner, isAmbiguous);
     }
   }
@@ -232,12 +235,24 @@ public class Reflector {
           match = setter;
           break;
         }
-        //TODO 这里不是很清晰
+        /**
+         * 如果当前的set方法没有歧义，则进行进一步的选择。
+         * 如果当前的set方法已经有歧义，则不再进行选择。(反正比较完了之后都会生成歧义的调用方法，后续的选择已经没有必要)
+         */
         if (!isSetterAmbiguous) {
+          /**
+           * 如果match、setter第一个参数类型没有任何关系，就会创建产生歧义的方法调用。
+           * 对于歧义的方法调用，pickBetterSetter方法会在内部将值赋给setMethods、setTypes，然后返回null
+           * 因此，如果match==null，就说明已经产生了歧义方法
+           */
           match = pickBetterSetter(match, setter, propName);
           isSetterAmbiguous = match == null;
         }
       }
+      /**
+       * match == null 时，说明产生歧义方法，此时不需处理，因为pickBetterSetter方法已经处理了后续逻辑
+       * 否则，说明并非歧义方法，而是经过选择得到了唯一的最优方法，则应该做后续处理
+       */
       if (match != null) {
         addSetMethod(propName, match);
       }
@@ -248,13 +263,22 @@ public class Reflector {
     if (setter1 == null) {
       return setter2;
     }
+    //获取到两个方法的第一个参数的类型
     Class<?> paramType1 = setter1.getParameterTypes()[0];
     Class<?> paramType2 = setter2.getParameterTypes()[0];
+    //如果方法1的参数是方法二参数的超类或者超接口
+    /**
+     * 也就是选择类型给小的作为更合适的接口
+     * 因为遍历是由子类向父类进行的
+     */
     if (paramType1.isAssignableFrom(paramType2)) {
+      //则方法二是更合适的方法
       return setter2;
+      //反之，则认为方法一更合适
     } else if (paramType2.isAssignableFrom(paramType1)) {
       return setter1;
     }
+    //如果两个参数在类型上毫不相关，即没有父子类关系，则创建有歧义的方法调用者
     MethodInvoker invoker = new AmbiguousMethodInvoker(setter1,
         MessageFormat.format(
             "Ambiguous setters defined for property ''{0}'' in class ''{1}'' with types ''{2}'' and ''{3}''.",
@@ -321,7 +345,9 @@ public class Reflector {
   }
 
   private void addSetField(Field field) {
+    //先判断当前属性名是否合法
     if (isValidPropertyName(field.getName())) {
+      //因为当前属性是不提供set方法的，所以创建的实例是 SetFieldInvoker
       setMethods.put(field.getName(), new SetFieldInvoker(field));
       Type fieldType = TypeParameterResolver.resolveFieldType(field, type);
       setTypes.put(field.getName(), typeToClass(fieldType));
