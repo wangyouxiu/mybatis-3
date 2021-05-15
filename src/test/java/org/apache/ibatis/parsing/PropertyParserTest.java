@@ -49,7 +49,7 @@ class PropertyParserTest {
      *   由于没有设置分隔符，默认的分隔符是  “:”
      *   不会解析 ${a:b} 中间是否存在 ":" ，认为 “a:b” 整体是一个key，此时查询就会得到预设的value，也就是c
      */
-    Assertions.assertThat(PropertyParser.parse("${a:b}", props)).isEqualTo("c");
+    Assertions.assertThat(PropertyParser.parse("${a:b}", props)).isEqualTo("b");
 
     //移除 是否开启默认值的配置  此配置项默认是为false
     // 因此和   props.setProperty(PropertyParser.KEY_ENABLE_DEFAULT_VALUE, "false");   效果一样
