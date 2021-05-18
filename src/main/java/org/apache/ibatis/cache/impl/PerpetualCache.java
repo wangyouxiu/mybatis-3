@@ -22,12 +22,18 @@ import org.apache.ibatis.cache.Cache;
 import org.apache.ibatis.cache.CacheException;
 
 /**
+ * 一个永不过期的缓存实现，绝大多数情况下，我们不会需要一个永不过期的缓存类，这是缓存实现的基类。
+ * 是一个被装饰者
+ * 底层使用hashMap实现，重写了equals和hashCode方法，其余方法皆由hashMap实现
  * @author Clinton Begin
  */
 public class PerpetualCache implements Cache {
 
   private final String id;
 
+  /**
+   * 使用一个hashMap来存储缓存
+   */
   private final Map<Object, Object> cache = new HashMap<>();
 
   public PerpetualCache(String id) {

@@ -18,6 +18,7 @@ package org.apache.ibatis.cache;
 import java.util.concurrent.locks.ReadWriteLock;
 
 /**
+ * MyBatis缓存实现使用了装饰者模式
  * SPI for cache providers.
  * <p>
  * One instance of cache will be created for each namespace.
@@ -42,11 +43,13 @@ import java.util.concurrent.locks.ReadWriteLock;
 public interface Cache {
 
   /**
+   * 获取缓存标识
    * @return The identifier of this cache
    */
   String getId();
 
   /**
+   * put一个键值对
    * @param key
    *          Can be any object but usually it is a {@link CacheKey}
    * @param value
@@ -55,6 +58,7 @@ public interface Cache {
   void putObject(Object key, Object value);
 
   /**
+   * 获取缓存值
    * @param key
    *          The key
    * @return The object stored in the cache.
@@ -62,6 +66,7 @@ public interface Cache {
   Object getObject(Object key);
 
   /**
+   * 删除缓存
    * As of 3.3.0 this method is only called during a rollback
    * for any previous value that was missing in the cache.
    * This lets any blocking cache to release the lock that
@@ -79,11 +84,13 @@ public interface Cache {
   Object removeObject(Object key);
 
   /**
+   * 清楚缓存
    * Clears this cache instance.
    */
   void clear();
 
   /**
+   * 获得缓存中的元素数量  (并不是缓存的容量)
    * Optional. This method is not called by the core.
    *
    * @return The number of elements stored in the cache (not its capacity).
@@ -91,6 +98,7 @@ public interface Cache {
   int getSize();
 
   /**
+   * 获得读写锁
    * Optional. As of 3.2.6 this method is no longer called by the core.
    * <p>
    * Any locking needed by the cache must be provided internally by the cache provider.

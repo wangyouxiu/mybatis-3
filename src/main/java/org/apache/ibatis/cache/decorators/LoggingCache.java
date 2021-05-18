@@ -20,13 +20,20 @@ import org.apache.ibatis.logging.Log;
 import org.apache.ibatis.logging.LogFactory;
 
 /**
+ * 一个带有日志的缓存实现，内部持有一个Cache对象，再其基础上进行日志相关处理
  * @author Clinton Begin
  */
 public class LoggingCache implements Cache {
 
   private final Log log;
   private final Cache delegate;
+  /**
+   * 记录请求次数
+   */
   protected int requests = 0;
+  /**
+   * 计算命中率
+   */
   protected int hits = 0;
 
   public LoggingCache(Cache delegate) {
@@ -49,10 +56,19 @@ public class LoggingCache implements Cache {
     delegate.putObject(key, object);
   }
 
+  /**
+   * 获取缓存时，进行日志相关处理
+   * @param key
+   *          The key
+   * @return
+   */
   @Override
   public Object getObject(Object key) {
+    //统计请求次数
     requests++;
+    //被装饰者处理获取缓存的逻辑
     final Object value = delegate.getObject(key);
+    //value!=null 说明缓存命中
     if (value != null) {
       hits++;
     }
@@ -82,6 +98,10 @@ public class LoggingCache implements Cache {
     return delegate.equals(obj);
   }
 
+  /**
+   * 计算缓存命中率
+   * @return
+   */
   private double getHitRatio() {
     return (double) hits / (double) requests;
   }
