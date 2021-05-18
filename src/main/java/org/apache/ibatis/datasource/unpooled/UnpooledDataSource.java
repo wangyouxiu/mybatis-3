@@ -206,10 +206,13 @@ public class UnpooledDataSource implements DataSource {
   }
 
   private Connection doGetConnection(String username, String password) throws SQLException {
+    //创建properties对象
     Properties props = new Properties();
+    //设置driverProperties到对象中
     if (driverProperties != null) {
       props.putAll(driverProperties);
     }
+    //设置用户名密码
     if (username != null) {
       props.setProperty("user", username);
     }
@@ -220,16 +223,25 @@ public class UnpooledDataSource implements DataSource {
   }
 
   private Connection doGetConnection(Properties properties) throws SQLException {
+    //初始化Driver
     initializeDriver();
+    //获得连接对象
     Connection connection = DriverManager.getConnection(url, properties);
+    //配置连接对象
     configureConnection(connection);
     return connection;
   }
 
+  /**
+   * 加了 sunchronized 锁
+   * @throws SQLException
+   */
   private synchronized void initializeDriver() throws SQLException {
+    //判断 registeredDrivers 中是否已经存在当前驱动   如果不存在，则进行初始化
     if (!registeredDrivers.containsKey(driver)) {
       Class<?> driverType;
       try {
+        //获得driver的类
         if (driverClassLoader != null) {
           driverType = Class.forName(driver, true, driverClassLoader);
         } else {
@@ -237,8 +249,11 @@ public class UnpooledDataSource implements DataSource {
         }
         // DriverManager requires the driver to be loaded via the system ClassLoader.
         // http://www.kfu.com/~nsayer/Java/dyn-jdbc.html
+        //使用类加载器获得driver实例
         Driver driverInstance = (Driver) driverType.getDeclaredConstructor().newInstance();
+        //创建代理类，并将代理类注册到 DriverManager 中   代理类是内部类
         DriverManager.registerDriver(new DriverProxy(driverInstance));
+        //将driver实例添加到 registeredDrivers 中
         registeredDrivers.put(driver, driverInstance);
       } catch (Exception e) {
         throw new SQLException("Error setting driver on UnpooledDataSource. Cause: " + e);
@@ -247,12 +262,15 @@ public class UnpooledDataSource implements DataSource {
   }
 
   private void configureConnection(Connection conn) throws SQLException {
+    //设置超时时间
     if (defaultNetworkTimeout != null) {
       conn.setNetworkTimeout(Executors.newSingleThreadExecutor(), defaultNetworkTimeout);
     }
+    //设置自动提交
     if (autoCommit != null && autoCommit != conn.getAutoCommit()) {
       conn.setAutoCommit(autoCommit);
     }
+    //设置默认隔离级别
     if (defaultTransactionIsolationLevel != null) {
       conn.setTransactionIsolation(defaultTransactionIsolationLevel);
     }

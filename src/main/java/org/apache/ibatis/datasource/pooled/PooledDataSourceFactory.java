@@ -23,6 +23,7 @@ import org.apache.ibatis.datasource.unpooled.UnpooledDataSourceFactory;
 public class PooledDataSourceFactory extends UnpooledDataSourceFactory {
 
   public PooledDataSourceFactory() {
+    //创建了 PooledDataSource 对象，说明池化的关键不在 PooledDataSourceFactory 而在 PooledDataSource
     this.dataSource = new PooledDataSource();
   }
 
