@@ -29,6 +29,9 @@ public class CacheKey implements Cloneable, Serializable {
 
   private static final long serialVersionUID = 1146682552656046210L;
 
+  /**
+   * 单例，空缓存键
+   */
   public static final CacheKey NULL_CACHE_KEY = new CacheKey() {
 
     @Override

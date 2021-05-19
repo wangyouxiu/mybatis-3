@@ -18,6 +18,7 @@ package org.apache.ibatis.cache.decorators;
 import org.apache.ibatis.cache.Cache;
 
 /**
+ * 加了同步代码
  * @author Clinton Begin
  */
 public class SynchronizedCache implements Cache {

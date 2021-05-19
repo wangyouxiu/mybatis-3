@@ -20,12 +20,19 @@ import java.util.concurrent.TimeUnit;
 import org.apache.ibatis.cache.Cache;
 
 /**
+ * 定时清空整个容器
  * @author Clinton Begin
  */
 public class ScheduledCache implements Cache {
 
   private final Cache delegate;
+  /**
+   * 清空间隔，单位：毫秒
+   */
   protected long clearInterval;
+  /**
+   * 最后清空时间，单位：毫秒
+   */
   protected long lastClear;
 
   public ScheduledCache(Cache delegate) {
@@ -68,7 +75,9 @@ public class ScheduledCache implements Cache {
 
   @Override
   public void clear() {
+    //记录清空时间
     lastClear = System.currentTimeMillis();
+    //清空缓存容器
     delegate.clear();
   }
 
@@ -83,7 +92,9 @@ public class ScheduledCache implements Cache {
   }
 
   private boolean clearWhenStale() {
+    //判断是否需要清空
     if (System.currentTimeMillis() - lastClear > clearInterval) {
+      //清空缓存容器
       clear();
       return true;
     }

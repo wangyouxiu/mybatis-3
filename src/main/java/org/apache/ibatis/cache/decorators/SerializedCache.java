@@ -30,6 +30,7 @@ import org.apache.ibatis.io.Resources;
 import org.apache.ibatis.io.SerialFilterChecker;
 
 /**
+ * 支持序列化的缓存
  * @author Clinton Begin
  */
 public class SerializedCache implements Cache {
