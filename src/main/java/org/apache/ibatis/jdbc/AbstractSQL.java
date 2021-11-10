@@ -94,6 +94,9 @@ public abstract class AbstractSQL<T> {
    * @since 3.4.2
    */
   public T INTO_VALUES(String... values) {
+    //values可能有多个，所以定义上是  List<List<String>>
+    //这里先找到外层数组的下标，然后将真实的数据 addAll()。
+    //对于insert语句来说，columns 和 values 数据可以分多次添加。如果需要添加多个values就需要调用 ADD_ROW() ,为values数组增加一个元素
     List<String> list = sql().valuesList.get(sql().valuesList.size() - 1);
     Collections.addAll(list, values);
     return getSelf();
@@ -255,6 +258,8 @@ public abstract class AbstractSQL<T> {
 
   public T WHERE(String conditions) {
     sql().where.add(conditions);
+    //这里是为了拼接or语句提供的，lastList和where语句指向相同的内存地址
+    //调用OR()时，会在lastList上拼接or语句，即where语句后面也会进行拼接
     sql().lastList = sql().where;
     return getSelf();
   }
@@ -273,6 +278,12 @@ public abstract class AbstractSQL<T> {
     return getSelf();
   }
 
+  /**
+   * 在使用where 或者 having 进行条件拼接时，多个语句之间默认为 and 拼接
+   * 使用该方法实现 or 条件拼接。这里使用 lastList 存储当前的最后一个查询条件
+   * 在 WHERE()  HAVING() 方法中，存储对应条件之后，会将lastList指向对应的where或者having.
+   * @return
+   */
   public T OR() {
     sql().lastList.add(OR);
     return getSelf();
@@ -445,6 +456,7 @@ public abstract class AbstractSQL<T> {
 
   /**
    * used to add a new inserted row while do multi-row insert.
+   * 给valuesList增加一个元素，达到一次性插入多个values的目的
    *
    * @return the t
    * @since 3.5.2
@@ -463,6 +475,10 @@ public abstract class AbstractSQL<T> {
     return a;
   }
 
+  /**
+   * 构建sql最后一步
+   * @return
+   */
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
@@ -504,12 +520,14 @@ public abstract class AbstractSQL<T> {
     }
 
     private enum LimitingRowsStrategy {
+      //不需要分页或者适用于SQLServer数据库
       NOP {
         @Override
         protected void appendClause(SafeAppendable builder, String offset, String limit) {
           // NOP
         }
       },
+      //处理DB2数据库
       ISO {
         @Override
         protected void appendClause(SafeAppendable builder, String offset, String limit) {
@@ -521,6 +539,7 @@ public abstract class AbstractSQL<T> {
           }
         }
       },
+      //处理mysql
       OFFSET_LIMIT {
         @Override
         protected void appendClause(SafeAppendable builder, String offset, String limit) {
@@ -563,6 +582,15 @@ public abstract class AbstractSQL<T> {
       valuesList.add(new ArrayList<>());
     }
 
+    /**
+     * 各类语句生成的核心方法
+     * @param builder 内部持有的就是 StringBuilder
+     * @param keyword 不同类型语句有不同的keyword
+     * @param parts 前置步骤生成的各种list集合的值，比如 tables , columns , values 等等
+     * @param open
+     * @param close
+     * @param conjunction
+     */
     private void sqlClause(SafeAppendable builder, String keyword, List<String> parts, String open, String close,
                            String conjunction) {
       if (!parts.isEmpty()) {
@@ -576,6 +604,7 @@ public abstract class AbstractSQL<T> {
         for (int i = 0, n = parts.size(); i < n; i++) {
           String part = parts.get(i);
           if (i > 0 && !part.equals(AND) && !part.equals(OR) && !last.equals(AND) && !last.equals(OR)) {
+            //上述判断表明之前并不是 (and 或者 or) ， 说明是同类之间，需要使用对应的分隔符进行分隔
             builder.append(conjunction);
           }
           builder.append(part);
@@ -610,9 +639,15 @@ public abstract class AbstractSQL<T> {
       sqlClause(builder, "RIGHT OUTER JOIN", rightOuterJoin, "", "", "\nRIGHT OUTER JOIN ");
     }
 
+    /**
+     * insert 语句生成方法
+     * @param builder
+     * @return
+     */
     private String insertSQL(SafeAppendable builder) {
       sqlClause(builder, "INSERT INTO", tables, "", "", "");
       sqlClause(builder, "", columns, "(", ")", ", ");
+      //insert 语句的values 可能会有多个，这里遍历外层循环
       for (int i = 0; i < valuesList.size(); i++) {
         sqlClause(builder, i > 0 ? "," : "VALUES", valuesList.get(i), "(", ")", ", ");
       }
@@ -637,6 +672,7 @@ public abstract class AbstractSQL<T> {
 
     public String sql(Appendable a) {
       SafeAppendable builder = new SafeAppendable(a);
+      //sql类型判断
       if (statementType == null) {
         return null;
       }
