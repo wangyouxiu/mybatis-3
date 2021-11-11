@@ -203,6 +203,12 @@ public class SqlRunner {
     }
   }
 
+  /**
+   * 遍历args参数列表，获得参数对应的type类型，设置sql语句参数
+   * @param ps
+   * @param args
+   * @throws SQLException
+   */
   private void setParameters(PreparedStatement ps, Object... args) throws SQLException {
     for (int i = 0, n = args.length; i < n; i++) {
       if (args[i] == null) {
