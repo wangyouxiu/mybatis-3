@@ -21,7 +21,9 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 
+import java.io.IOException;
 import java.io.Reader;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -61,12 +63,29 @@ import org.mockito.Mockito;
 class SqlSessionTest extends BaseDataTest {
   private static SqlSessionFactory sqlMapper;
 
-  @BeforeAll
+//  @BeforeAll
   static void setup() throws Exception {
     createBlogDataSource();
     final String resource = "org/apache/ibatis/builder/MapperConfig.xml";
     final Reader reader = Resources.getResourceAsReader(resource);
     sqlMapper = new SqlSessionFactoryBuilder().build(reader);
+  }
+
+  @Test
+  void testSqlSession() throws SQLException, IOException {
+    //执行db脚本
+    createBlogDataSource();
+    final String resource = "org/apache/ibatis/builder/MapperConfig.xml";
+    final Reader reader = Resources.getResourceAsReader(resource);
+    SqlSessionFactory sqlSessionFactory = new SqlSessionFactoryBuilder().build(reader);
+    SqlSession sqlSession = sqlSessionFactory.openSession();
+    sqlSession.close();
+  }
+
+  @Test
+  void shouldOpenAndClose() {
+    SqlSession session = sqlMapper.openSession(TransactionIsolationLevel.SERIALIZABLE);
+    session.close();
   }
 
   @Test
@@ -131,11 +150,6 @@ class SqlSessionTest extends BaseDataTest {
     }
   }
 
-  @Test
-  void shouldOpenAndClose() {
-    SqlSession session = sqlMapper.openSession(TransactionIsolationLevel.SERIALIZABLE);
-    session.close();
-  }
 
   @Test
   void shouldCommitAnUnUsedSqlSession() {
