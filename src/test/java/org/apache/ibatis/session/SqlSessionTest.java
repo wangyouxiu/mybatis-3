@@ -79,6 +79,10 @@ class SqlSessionTest extends BaseDataTest {
     final Reader reader = Resources.getResourceAsReader(resource);
     SqlSessionFactory sqlSessionFactory = new SqlSessionFactoryBuilder().build(reader);
     SqlSession sqlSession = sqlSessionFactory.openSession();
+    //getMapper 返回目标类的代理对象
+    AuthorMapper mapper = sqlSession.getMapper(AuthorMapper.class);
+    Author author = mapper.selectAuthor(1);
+    System.out.println(author);
     sqlSession.close();
   }
 
