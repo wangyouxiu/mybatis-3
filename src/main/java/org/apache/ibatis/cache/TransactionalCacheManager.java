@@ -52,6 +52,7 @@ public class TransactionalCacheManager {
   }
 
   private TransactionalCache getTransactionalCache(Cache cache) {
+    //从缓存中查询，如果不存在，需要创建，然后put进去
     return transactionalCaches.computeIfAbsent(cache, TransactionalCache::new);
   }
 
